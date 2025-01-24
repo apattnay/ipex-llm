@@ -17,7 +17,8 @@ pip install --pre --upgrade ipex-llm[xpu] --extra-index-url https://pytorch-exte
 
 # transformers>=4.43.1 is required for Llama3.1 with IPEX-LLM optimizations
 pip install transformers==4.47.1
-pip install "trl<0.12.0"
+pip install 'accelerate>=0.26.0'
+pip install trl
 ```
 
 #### 1.2 Installation on Windows
