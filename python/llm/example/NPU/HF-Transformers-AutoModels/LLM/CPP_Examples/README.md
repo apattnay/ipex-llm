@@ -11,6 +11,7 @@ In this directory, you will find a C++ example on how to run LLM models on Intel
 | Qwen2 | [Qwen/Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct), [Qwen/Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct) |
 | Qwen2.5 | [Qwen/Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct), [Qwen/Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) |
 | MiniCPM | [openbmb/MiniCPM-1B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-1B-sft-bf16), [openbmb/MiniCPM-2B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-2B-sft-bf16) |
+| DeepSeek-R1 | [DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B), [DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B) |
 
 Please refer to [Quickstart](../../../../../../../docs/mddocs/Quickstart/npu_quickstart.md#c-api) for details about verified platforms.
 
@@ -72,6 +73,12 @@ python convert.py --repo-id-or-model-path openbmb/MiniCPM-1B-sft-bf16 --save-di
 
 :: to convert MiniCPM-2B-sft-bf16
 python convert.py --repo-id-or-model-path openbmb/MiniCPM-2B-sft-bf16 --save-directory <converted_model_path>
+
+:: to convert DeepSeek-R1-Distill-Qwen-1.5B
+python convert.py --repo-id-or-model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B  --save-directory <converted_model_path>
+
+:: to convert DeepSeek-R1-Distill-Qwen-7B
+python convert.py --repo-id-or-model-path deepseek-ai/DeepSeek-R1-Distill-Qwen-7B  --save-directory <converted_model_path>
 ```
 
 Arguments info:
@@ -81,9 +88,9 @@ Arguments info:
 - `--max-prompt-len MAX_PROMPT_LEN`: argument defining the maximum number of tokens that the input prompt can contain. It is default to be `512`.
 - `--low-bit LOW_BIT`: argument defining the low bit optimizations that will be applied to the model. Current available options are `"sym_int4"`, `"asym_int4"` and `"sym_int8"`, with `"sym_int4"` as the default.
 
-## 3. Build C++ Example `llama-cli-npu`(Optional)
+## 3. Build C++ Example `llm-cli`(Optional)
 
-- You can run below cmake script in cmd to build `llama-cli-npu` by yourself, don't forget to replace below <CONDA_ENV_DIR> with your own path.
+- You can run below cmake script in cmd to build `llm-cli` by yourself, don't forget to replace below <CONDA_ENV_DIR> with your own path.
 
 ```cmd
 :: under current directory
@@ -96,21 +103,21 @@ cmake --build . --config Release -j
 cd Release
 ```
 
-- You can also directly use our released `llama-cli-npu.exe` which has the same usage as this example `llama-cli-npu.cpp`
+- You can also directly use our released `llm-cli.exe` which has the same usage as this example `llm-cli.cpp`
 
 > [!NOTE]
-> Our released `llama-cli-npu.exe` can be found at <CONDA_ENV_DIR>\bigdl-core-npu
+> Our released `llm-cli.exe` can be found at <CONDA_ENV_DIR>\bigdl-core-npu
 
-## 4. Run `llama-cli-npu`
+## 4. Run `llm-cli`
 
-With built `llama-cli-npu`, you can run the example with specified paramaters. For example,
+With built `llm-cli`, you can run the example with specified paramaters. For example,
 
 ```cmd
 # Run simple text completion
-llama-cli-npu.exe -m <converted_model_path> -n 64 "AI是什么?"
+llm-cli.exe -m <converted_model_path> -n 64 "AI是什么?"
 
 # Run in conversation mode
-llama-cli-npu.exe -m <converted_model_path> -cnv
+llm-cli.exe -m <converted_model_path> -cnv
 ```
 
 Arguments info:

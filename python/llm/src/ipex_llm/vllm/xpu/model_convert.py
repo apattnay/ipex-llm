@@ -65,9 +65,14 @@ def _model_sample_convert():
 def _ipex_llm_convert(load_in_low_bit):
     from vllm.worker.xpu_model_runner import XPUModelRunner
     from ipex_llm.vllm.xpu.ipex_llm_wrapper import get_ipex_llm_wrapper
-    import vllm.executor.ray_utils as ray_utils
+    from ipex_llm.vllm.xpu.ipex_llm_v1_wrapper import get_ipex_llm_v1_wrapper
+    import vllm.executor.ray_utils as ray_utils_v0
+    import vllm.v1.executor.ray_utils as ray_utils_v1
+    from vllm.v1.worker.gpu_model_runner import GPUModelRunner
     setattr(XPUModelRunner, "load_model", get_load_function(load_in_low_bit))
-    setattr(ray_utils, "RayWorkerWrapper", get_ipex_llm_wrapper(load_in_low_bit))
+    setattr(GPUModelRunner, "load_model", get_load_function(load_in_low_bit))
+    setattr(ray_utils_v0, "RayWorkerWrapper", get_ipex_llm_wrapper(load_in_low_bit))
+    setattr(ray_utils_v1, "RayWorkerWrapper", get_ipex_llm_v1_wrapper(load_in_low_bit))
 
 
 def get_load_function(low_bit):
@@ -77,40 +82,53 @@ def get_load_function(low_bit):
         # from vllm.utils import measure_device_memory
         from vllm.utils import DeviceMemoryProfiler
         with DeviceMemoryProfiler() as m:
-            self.model = get_model(
-                model_config=self.model_config,
-                device_config=DeviceConfig("cpu"),
-                load_config=self.load_config,
-                lora_config=self.lora_config,
-                parallel_config=self.parallel_config,
-                scheduler_config=self.scheduler_config,
-                cache_config=self.cache_config,
-            )
-            if "qwen" in self.model_config.model.lower() or \
-                    "baichuan" in self.model_config.model.lower() or \
-                    "codegeex4-all" in self.model_config.model.lower() or \
-                    "chatglm" in self.model_config.model.lower():
-                self.model.apply(padding_mlp)
-            from ipex_llm import optimize_model
             import os
-            not_convert_last_mlp = os.getenv("IPEX_LLM_NOT_CONVERT_LAST_MLP", None)
-            if not_convert_last_mlp is not None:
-                # only use to avoid nan value in last mlp forward running glm4-9b-chat
-                modules = ["35.mlp", "36.mlp", "37.mlp", "38.mlp", "39.mlp"]
-            else:
-                modules = None
-            if "minicpm" in self.model_config.model.lower():
-                modules = ["vpm", "resampler"]
-            # only for minicpm_2_6
-            if "minicpm-v" in self.model_config.model.lower():
-                from ipex_llm.transformers.models.minicpmv import merge_qkv
-                self.model.vpm.apply(merge_qkv)
-            if "internvl2" in self.model_config.model.lower():
-                modules = ["vision_model", "mlp1"]
-            optimize_model(self.model, low_bit=low_bit, torch_dtype=self.model_config.dtype,
-                           modules_to_not_convert=modules)
-            self.model = self.model.to(device=self.device_config.device,
-                                       dtype=self.model_config.dtype)
+            from dataclasses import replace
+            new_device_config = DeviceConfig("cpu")
+            new_vllm_config = replace(self.vllm_config, device_config=new_device_config)
+            # We are loading an low-bit model, where all the optimizations should have been
+            # applied...
+            # We can skip the following optimizations
+            self.model = get_model(
+                vllm_config=new_vllm_config
+            )
+            if self.vllm_config.model_config.low_bit_model_path is None:
+                if ("qwen" in self.vllm_config.model_config.model.lower() or
+                        "baichuan" in self.vllm_config.model_config.model.lower() or
+                        "codegeex4-all" in self.vllm_config.model_config.model.lower() or
+                        "chatglm" in self.vllm_config.model_config.model.lower()) and \
+                        "gptq" not in self.model_config.model.lower() and \
+                        "awq" not in self.model_config.model.lower():
+                    self.model.apply(padding_mlp)
+                from ipex_llm import optimize_model
+                not_convert_last_mlp = os.getenv("IPEX_LLM_NOT_CONVERT_LAST_MLP", None)
+                if not_convert_last_mlp is not None:
+                    # only use to avoid nan value in last mlp forward running glm4-9b-chat
+                    modules = ["35.mlp", "36.mlp", "37.mlp", "38.mlp", "39.mlp"]
+                else:
+                    modules = None
+                if "minicpm" in self.vllm_config.model_config.model.lower():
+                    modules = ["vpm", "resampler"]
+                if "internvl2" in self.vllm_config.model_config.model.lower():
+                    modules = ["vision_model", "mlp1"]
+                if "deepseek-v2" in self.vllm_config.model_config.model.lower():
+                    modules = ["down_proj"]
+                optimize_model(self.model,
+                               low_bit=low_bit,
+                               torch_dtype=self.vllm_config.model_config.dtype,
+                               modules_to_not_convert=modules)
+            # Guancheng: We have to save the model before moving it to the XPU device.
+            # The `to` method will convert the underlying data.
+            # Saving it before will help to avoid converting two times.
+            if self.vllm_config.model_config.low_bit_save_path is not None:
+                # The local_rank is used for loading models with tensor parallel settings.
+                local_rank = os.environ["LOCAL_RANK"]
+                saved_path = os.path.join(self.vllm_config.model_config.low_bit_save_path,
+                                          str(local_rank))
+                self.model.save_low_bit(saved_path)
+
+            self.model = self.model.to(device=self.vllm_config.device_config.device,
+                                       dtype=self.vllm_config.model_config.dtype)
 
         self.model_memory_usage = m.consumed_memory
         logger = init_logger(__name__)

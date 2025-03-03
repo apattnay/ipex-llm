@@ -162,7 +162,8 @@ class MiniCPMLMHead(LLMBaseNNFactory):
 
 
 def convert_lm_head_and_embedding(model, n_splits_linear, temp_dir, weight_dir,
-                                  convert_model=False, max_prompt_len=1):
+                                  convert_model=False, max_prompt_len=1,
+                                  keep_ir=False, compile_blob=True):
     num_heads = model.model.layers[0].self_attn.num_heads
     num_key_value_heads = model.model.layers[0].self_attn.num_key_value_heads
     head_dim = model.model.layers[0].self_attn.head_dim
@@ -230,7 +231,8 @@ def convert_lm_head_and_embedding(model, n_splits_linear, temp_dir, weight_dir,
         asym=asym
     )
     last_blob_path = update_names_of_IR_and_export_blob(new_lm_head, "lm_head", temp_dir,
-                                                        True, True)
+                                                        keep_ir=keep_ir, compile_blob=compile_blob)
+    os.remove(os.path.join(temp_dir, "lm_head.bin"))
 
     # save weights bins files
     if n_splits_linear == 1:
@@ -280,22 +282,27 @@ def convert_lm_head_and_embedding(model, n_splits_linear, temp_dir, weight_dir,
                                               dtype=np.float16,
                                               scale_emb=model.config.scale_emb)
         update_names_of_IR_and_export_blob(embedding_post, "embedding_post",
-                                           temp_dir, True, False)
+                                           temp_dir, keep_ir=keep_ir, compile_blob=compile_blob)
         embedding_post_prefill = MiniCPMPostEmbedding(max_prompt_len, model.config.hidden_size,
                                                       dtype=np.float16,
                                                       scale_emb=model.config.scale_emb)
         update_names_of_IR_and_export_blob(embedding_post_prefill,
                                            "embedding_post_prefill",
-                                           temp_dir, True, False)
+                                           temp_dir, keep_ir=keep_ir, compile_blob=compile_blob)
+        os.remove(os.path.join(temp_dir, "embedding_post.bin"))
+        os.remove(os.path.join(temp_dir, "embedding_post_prefill.bin"))
     else:
         first_blob_path = update_names_of_IR_and_export_blob(new_embedding, "embedding",
-                                                             temp_dir, True, False)
+                                                             temp_dir, keep_ir=keep_ir,
+                                                             compile_blob=compile_blob)
+        os.remove(os.path.join(temp_dir, "embedding.bin"))
     return first_blob_path, last_blob_path
 
 
 def convert_minicpm_layer(model, layer_idx, n_splits_linear, n_splits_down_proj,
                           temp_dir, weight_dir, transpose_value_cache, kv_len, group_size,
-                          layernorm_const, mode="decode"):
+                          const_parameter, mode="decode",
+                          keep_ir=False, compile_blob=True):
     num_heads = model.model.layers[0].self_attn.num_heads
     num_key_value_heads = model.model.layers[0].self_attn.num_key_value_heads
     head_dim = model.model.layers[0].self_attn.head_dim
@@ -326,12 +333,12 @@ def convert_minicpm_layer(model, layer_idx, n_splits_linear, n_splits_down_proj,
     else:
         input_len = kv_len
         decoder_name = "decoder_layer_prefill"
-        layernorm_const = False
+        const_parameter = False
 
     single_decoder = LowBitMinicpmMultiDecoderlayer(
         [1, input_len, num_heads * head_dim],
-        input_layernorm_weights=[layer_norm_0] if layernorm_const else None,
-        post_attn_layernorm_weights=[layer_norm_1] if layernorm_const else None,
+        input_layernorm_weights=[layer_norm_0] if const_parameter else None,
+        post_attn_layernorm_weights=[layer_norm_1] if const_parameter else None,
         cached_cos=cached_cos,
         cached_sin=cached_sin,
         num_heads=num_heads,
@@ -353,10 +360,11 @@ def convert_minicpm_layer(model, layer_idx, n_splits_linear, n_splits_down_proj,
     rest_blob_path = update_names_of_IR_and_export_blob(single_decoder,
                                                         decoder_name,
                                                         temp_dir,
-                                                        True, True)
+                                                        keep_ir=keep_ir, compile_blob=compile_blob)
+    os.remove(os.path.join(temp_dir, decoder_name + ".bin"))
 
     if mode == "decode":
-        if layernorm_const:
+        if const_parameter:
             st_idx = 5
         else:
             input_lm_bin_file = os.path.join(weight_dir, f"model_{layer_idx}_input_3.bin")
@@ -386,7 +394,8 @@ def convert_minicpm_layer(model, layer_idx, n_splits_linear, n_splits_down_proj,
 
 def convert_fused_minicpm_layer(model, fused_layers, n_splits_linear, n_splits_down_proj,
                                 save_dir, weight_dir, transpose_value_cache, kv_len, group_size,
-                                layernorm_const, mode="decode"):
+                                const_parameter, mode="decode",
+                                keep_ir=False, compile_blob=True):
     num_heads = model.model.layers[0].self_attn.num_heads
     num_key_value_heads = model.model.layers[0].self_attn.num_key_value_heads
     head_dim = model.model.layers[0].self_attn.head_dim
@@ -452,6 +461,10 @@ def convert_fused_minicpm_layer(model, fused_layers, n_splits_linear, n_splits_d
         else:  # FP16 Linear
             np_dtype = np.float16
 
+        if not const_parameter:
+            input_layer_norm_weights = None
+            post_attn_layernorm_weights = None
+
         fused_decoder = LowBitMinicpmMultiDecoderlayer(
             [1, 1, num_heads * head_dim],
             input_layernorm_weights=input_layer_norm_weights,
@@ -477,6 +490,6 @@ def convert_fused_minicpm_layer(model, fused_layers, n_splits_linear, n_splits_d
         update_names_of_IR_and_export_blob(fused_decoder,
                                            f"decoder_layer_{i}",
                                            save_dir,
-                                           compile_blob=True,
-                                           keep_ir=False)
+                                           keep_ir=keep_ir, compile_blob=compile_blob)
+        os.remove(os.path.join(save_dir, f"decoder_layer_{i}" + ".bin"))
     return 0

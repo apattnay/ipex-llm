@@ -70,8 +70,9 @@ def is_auto_awq_available():
 
 def is_vllm_available():
     global _IS_VLLM_AVAILABLE
+    _IS_VLLM_AVAILABLE = os.getenv("IPEX_LLM_NOT_USE_VLLM", None)
     if _IS_VLLM_AVAILABLE is not None:
-        return _IS_VLLM_AVAILABLE
+        return False
     import sys
     original_path = sys.path
     # Temporally remove current directory
@@ -667,7 +668,6 @@ def _replace_with_low_bit_linear(model, qtype, modules_to_not_convert=None,
                             out_features,
                             mp_group,
                             None,
-                            None,
                             optimize_lm_head,
                             None
                         )
@@ -1032,6 +1032,9 @@ def _optimize_pre(model, qtype=None):
         if hasattr(model, "vpm"):
             from ipex_llm.transformers.models.minicpmv import merge_qkv
             model.vpm.apply(merge_qkv)
+        # tts opt
+        if hasattr(model, "tts"):
+            _optimize_pre(model.tts.model, qtype=qtype)
         # llm opt
         model.llm.config.model_type = "qwen2"
         _optimize_pre(model.llm, qtype=qtype)
@@ -1062,7 +1065,14 @@ def _optimize_pre(model, qtype=None):
         from ipex_llm.transformers.models.glm import merge_qkv, split_mlp
         model.apply(merge_qkv)
         model.apply(split_mlp)
-
+    elif model.config.model_type == "baichuan_m1":
+        from ipex_llm.transformers.models.baichuan_m1 import pre_register_inv_freq
+        model.apply(pre_register_inv_freq)
+    elif model.config.model_type == "multi_modality":
+        _optimize_pre(model.language_model)
+    elif model.config.model_type == "deepseek_v3" and model.config.hidden_size == 2048:
+        from ipex_llm.transformers.models.deepseek import padding_mla_v_hd
+        model.apply(padding_mla_v_hd)
     return model
 
 
@@ -1966,6 +1976,9 @@ def _optimize_post(model):
             from transformers.models.whisper.modeling_whisper import WhisperSdpaAttention
             from ipex_llm.transformers.models.whisper import whisper_attention_forward
             convert_forward(model.apm, WhisperSdpaAttention, whisper_attention_forward)
+        # tts opt
+        if hasattr(model, "tts"):
+            _optimize_post(model.tts.model)
         # llm opt
         model.llm.config.model_type = "qwen2"
         _optimize_post(model.llm)
@@ -1994,5 +2007,63 @@ def _optimize_post(model):
         model.llm.config.rope_scaling = {"rope_type": "default"}
         _optimize_post(model.llm)
         model.llm.config.model_type = "megrezo"
+    elif model.config.model_type == "baichuan_m1":
+        modeling_module_name = model.__class__.__module__
+        module = importlib.import_module(modeling_module_name)
+        from ipex_llm.transformers.models.common import rms_norm_forward
+        from ipex_llm.transformers.models.baichuan_m1 import model_forward
+        from ipex_llm.transformers.models.baichuan_m1 import eager_attention_forward
+        convert_forward(model, module.BaichuanModel, model_forward)
+        convert_forward(model, module.BaichuanRMSNorm, rms_norm_forward)
+        convert_forward(model, module.BaichuanAttention, eager_attention_forward)
+    elif model.config.model_type == "multi_modality":
+        # vision
+        vpm_modeling_module_name = model.vision_model.vision_tower.__class__.__module__
+        vpm_module = importlib.import_module(vpm_modeling_module_name)
+        from ipex_llm.transformers.models.janus import vision_attention_forward
+        convert_forward(model.vision_model, vpm_module.Attention, vision_attention_forward)
 
+        # llm
+        _optimize_post(model.language_model)
+    elif model.config.model_type == "deepseek_v3" and model.config.hidden_size == 2048:
+        modeling_module_name = model.__class__.__module__
+        module = importlib.import_module(modeling_module_name)
+        from ipex_llm.transformers.models.common import rms_norm_forward
+        from ipex_llm.transformers.models.common import mlp_silu_forward
+        from ipex_llm.transformers.models.deepseek import deepseek_model_forward
+        from ipex_llm.transformers.models.deepseek import deepseek_attention_forward
+        from ipex_llm.transformers.models.deepseek import deepseek_moe_forward
+        convert_forward(model, module.DeepseekV3RMSNorm, rms_norm_forward)
+        convert_forward(model, module.DeepseekV3MLP, mlp_silu_forward)
+        convert_forward(model, module.DeepseekV3Model, deepseek_model_forward)
+        convert_forward(model, module.DeepseekV3Attention, deepseek_attention_forward)
+        convert_forward(model, module.DeepseekV3MoE, deepseek_moe_forward)
+
+    return model
+
+
+def convert_forward_to_xpu(m, target_m, new_forward):
+    # print(m.__class__.__name__)
+    if m.__class__ == target_m:
+        bound_method = new_forward.__get__(m, m.__class__)
+        setattr(m, "forward", bound_method)
+        m = m.to(device="xpu", dtype=torch.float16)
+    for _, sub_m in m.named_children():
+        convert_forward_to_xpu(sub_m, target_m, new_forward)
+
+
+def convert_model_hybrid(model):
+    if model.config.model_type == "deepseek_v3":
+        modeling_module_name = model.__class__.__module__
+        module = importlib.import_module(modeling_module_name)
+        from ipex_llm.transformers.models.deepseek_v3 import (
+            hybrid_DeepseekV3Attention_forward,
+            hybrid_DeepseekV3MLP_forward,
+        )
+
+        first_k_dense_replace = model.config.first_k_dense_replace
+        convert_forward_to_xpu(model, module.DeepseekV3Attention,
+                               hybrid_DeepseekV3Attention_forward)
+        convert_forward_to_xpu(model.model.layers[:first_k_dense_replace], module.DeepseekV3MLP,
+                               hybrid_DeepseekV3MLP_forward)
     return model

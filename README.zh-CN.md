@@ -1,8 +1,3 @@
-> [!IMPORTANT]
-> ***`ipex-llm` 将会迁移至 https://github.com/intel/ipex-llm***
- 
----
-
 # Intel® LLM Library for PyTorch*
 <p>
   < <a href='./README.md'>English</a> | <b>中文 ></b> 
@@ -10,18 +5,21 @@
 
 **`ipex-llm`** 是一个将大语言模型高效地运行于 Intel [GPU](docs/mddocs/Quickstart/install_windows_gpu.md) *(如搭载集成显卡的个人电脑，Arc 独立显卡、Flex 及 Max 数据中心 GPU 等)*、[NPU](docs/mddocs/Quickstart/npu_quickstart.md) 和 CPU 上的大模型 XPU 加速库[^1]。 
 > [!NOTE]
-> - *`ipex-llm`可以与  [llama.cpp](docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md), [Ollama](docs/mddocs/Quickstart/ollama_quickstart.zh-CN.md), [HuggingFace transformers](python/llm/example/GPU/HuggingFace), [LangChain](python/llm/example/GPU/LangChain), [LlamaIndex](python/llm/example/GPU/LlamaIndex), [vLLM](docs/mddocs/Quickstart/vLLM_quickstart.md), [Text-Generation-WebUI](docs/mddocs/Quickstart/webui_quickstart.md), [DeepSpeed-AutoTP](python/llm/example/GPU/Deepspeed-AutoTP), [FastChat](docs/mddocs/Quickstart/fastchat_quickstart.md), [Axolotl](docs/mddocs/Quickstart/axolotl_quickstart.md), [HuggingFace PEFT](python/llm/example/GPU/LLM-Finetuning), [HuggingFace TRL](python/llm/example/GPU/LLM-Finetuning/DPO), [AutoGen](python/llm/example/CPU/Applications/autogen), [ModeScope](python/llm/example/GPU/ModelScope-Models) 等无缝衔接。* 
-> - ***70+** 模型已经在 `ipex-llm` 上得到优化和验证（如 Llama, Phi, Mistral, Mixtral, Whisper, Qwen, ChatGLM, MiniCPM, Qwen-VL, MiniCPM-V 等), 以获得先进的 **大模型算法优化**, **XPU 加速** 以及 **低比特（FP8FP8/FP6/FP4/INT4) 支持**；更多模型信息请参阅[这里](#模型验证)。*
+> - *`ipex-llm`可以与  [llama.cpp](docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md), [Ollama](docs/mddocs/Quickstart/ollama_portable_zip_quickstart.zh-CN.md), [HuggingFace transformers](python/llm/example/GPU/HuggingFace), [LangChain](python/llm/example/GPU/LangChain), [LlamaIndex](python/llm/example/GPU/LlamaIndex), [vLLM](docs/mddocs/Quickstart/vLLM_quickstart.md), [Text-Generation-WebUI](docs/mddocs/Quickstart/webui_quickstart.md), [DeepSpeed-AutoTP](python/llm/example/GPU/Deepspeed-AutoTP), [FastChat](docs/mddocs/Quickstart/fastchat_quickstart.md), [Axolotl](docs/mddocs/Quickstart/axolotl_quickstart.md), [HuggingFace PEFT](python/llm/example/GPU/LLM-Finetuning), [HuggingFace TRL](python/llm/example/GPU/LLM-Finetuning/DPO), [AutoGen](python/llm/example/CPU/Applications/autogen), [ModeScope](python/llm/example/GPU/ModelScope-Models) 等无缝衔接。* 
+> - ***70+** 模型已经在 `ipex-llm` 上得到优化和验证（如 Llama, Phi, Mistral, Mixtral, Whisper, DeepSeek, Qwen, ChatGLM, MiniCPM, Qwen-VL, MiniCPM-V 等）, 以获得先进的 **大模型算法优化**, **XPU 加速** 以及 **低比特（FP8FP8/FP6/FP4/INT4）支持**；更多模型信息请参阅[这里](#模型验证)。*
 
 ## 最新更新 🔥 
+- [2025/02] 新增 [llama.cpp Portable Zip](https://github.com/intel/ipex-llm/releases/tag/v2.2.0-nightly) 在 Intel [GPU](docs/mddocs/Quickstart/llamacpp_portable_zip_gpu_quickstart.md) 和 [NPU](docs/mddocs/Quickstart/llama_cpp_npu_portable_zip_quickstart.zh-CN.md) 上直接**免安装运行 llama.cpp**。
+- [2025/02] 新增 [Ollama Portable Zip](https://github.com/intel/ipex-llm/releases/tag/v2.2.0-nightly) 在 Intel GPU 上直接**免安装运行 Ollama** (包括 [Windows](docs/mddocs/Quickstart/ollama_portable_zip_quickstart.zh-CN.md#windows用户指南) 和 [Linux](docs/mddocs/Quickstart/ollama_portable_zip_quickstart.zh-CN.md#linux用户指南))。
+- [2025/02] 新增在 Intel Arc GPUs 上运行 [vLLM 0.6.6](docs/mddocs/DockerGuides/vllm_docker_quickstart.md) 的支持。
 - [2025/01] 新增在 Intel Arc [B580](docs/mddocs/Quickstart/bmg_quickstart.md) GPU 上运行 `ipex-llm` 的指南。
-- [2025/01] 新增在 Intel GPU 上运行 [Ollama 0.5.1](docs/mddocs/Quickstart/ollama_quickstart.zh-CN.md) 的支持。
+- [2025/01] 新增在 Intel GPU 上运行 [Ollama 0.5.4](docs/mddocs/Quickstart/ollama_quickstart.zh-CN.md) 的支持。
 - [2024/12] 增加了对 Intel Core Ultra [NPU](docs/mddocs/Quickstart/npu_quickstart.md)（包括 100H，200V，200K 和 200H 系列）的 **Python** 和 **C++** 支持。
-- [2024/11] 新增在 Intel Arc GPUs 上运行 [vLLM 0.6.2](docs/mddocs/DockerGuides/vllm_docker_quickstart.md) 的支持。
 
 <details><summary>更多更新</summary>
 <br/>
 
+- [2024/11] 新增在 Intel Arc GPUs 上运行 [vLLM 0.6.2](docs/mddocs/DockerGuides/vllm_docker_quickstart.md) 的支持。
 - [2024/07] 新增 Microsoft **GraphRAG** 的支持（使用运行在本地 Intel GPU 上的 LLM），详情参考[快速入门指南](docs/mddocs/Quickstart/graphrag_quickstart.md)。
 - [2024/07] 全面增强了对多模态大模型的支持，包括 [StableDiffusion](python/llm/example/GPU/HuggingFace/Multimodal/StableDiffusion), [Phi-3-Vision](python/llm/example/GPU/HuggingFace/Multimodal/phi-3-vision), [Qwen-VL](python/llm/example/GPU/HuggingFace/Multimodal/qwen-vl)，更多详情请点击[这里](python/llm/example/GPU/HuggingFace/Multimodal)。
 - [2024/07] 新增 Intel GPU 上 **FP6** 的支持，详情参考[更多数据类型样例](python/llm/example/GPU/HuggingFace/More-Data-Types)。 
@@ -61,8 +59,8 @@
 
 <table width="100%">
   <tr>
-    <td align="center" colspan="1"><strong>Intel Core Ultra (Series 1) iGPU</strong></td>
-    <td align="center" colspan="1"><strong>Intel Core Ultra (Series 2) NPU</strong></td>
+    <td align="center" colspan="1"><strong>Intel Core Ultra iGPU</strong></td>
+    <td align="center" colspan="1"><strong>Intel Core Ultra NPU</strong></td>
     <td align="center" colspan="1"><strong>Intel Arc dGPU</strong></td>
     <td align="center" colspan="1"><strong>2-Card Intel Arc dGPUs</strong></td>
   </tr>
@@ -83,23 +81,23 @@
       </a>
     </td>
     <td>
-      <a href="https://llm-assets.readthedocs.io/en/latest/_images/2arc_qwen1.5-32B_fp6_fastchat.gif" target="_blank">
-        <img src="https://llm-assets.readthedocs.io/en/latest/_images/2arc_qwen1.5-32B_fp6_fastchat.gif" width=100%; />
+      <a href="https://llm-assets.readthedocs.io/en/latest/_images/2arc_DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gif" target="_blank">
+        <img src="https://llm-assets.readthedocs.io/en/latest/_images/2arc_DeepSeek-R1-Distill-Qwen-32B-Q4_K_M.gif" width=100%; />
       </a>
     </td>
   </tr>
   <tr>
     <td align="center" width="25%">
-      <a href="docs/mddocs/Quickstart/ollama_quickstart.md">Ollama <br> (Mistral-7B Q4_K) </a>
+      <a href="docs/mddocs/Quickstart/ollama_quickstart.zh-CN.md">Ollama <br> (Mistral-7B, Q4_K) </a>
     </td>
     <td align="center" width="25%">
-      <a href="docs/mddocs/Quickstart/npu_quickstart.md">HuggingFace <br> (Llama3.2-3B SYM_INT4)</a>
+      <a href="docs/mddocs/Quickstart/npu_quickstart.md">HuggingFace <br> (Llama3.2-3B, SYM_INT4)</a>
     </td>
     <td align="center" width="25%">
-      <a href="docs/mddocs/Quickstart/webui_quickstart.md">TextGeneration-WebUI <br> (Llama3-8B FP8) </a>
+      <a href="docs/mddocs/Quickstart/webui_quickstart.md">TextGeneration-WebUI <br> (Llama3-8B, FP8) </a>
     </td>
     <td align="center" width="25%">
-      <a href="docs/mddocs/Quickstart/fastchat_quickstart.md">FastChat <br> (QWen1.5-32B FP6)</a>
+      <a href="docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md">llama.cpp <br> (DeepSeek-R1-Distill-Qwen-32B, Q4_K)</a>
     </td>  </tr>
 </table>
 
@@ -180,10 +178,11 @@ See the demo of running [*Text-Generation-WebUI*](https://ipex-llm.readthedocs.i
 ## `ipex-llm` 快速入门
 
 ### 使用
+- [Ollama Portable Zip](docs/mddocs/Quickstart/ollama_portable_zip_quickstart.zh-CN.md): 在 Intel GPU 上直接**免安装运行 Ollama**。
 - [Arc B580](docs/mddocs/Quickstart/bmg_quickstart.md): 在 Intel Arc **B580** GPU 上运行 `ipex-llm`（包括 Ollama, llama.cpp, PyTorch, HuggingFace 等）
 - [NPU](docs/mddocs/Quickstart/npu_quickstart.md): 在 Intel **NPU** 上运行 `ipex-llm`（支持 Python 和 C++）
-- [llama.cpp](docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md): 在 Intel GPU 上运行 **llama.cpp** (*使用 `ipex-llm` 的 C++ 接口*) 
 - [Ollama](docs/mddocs/Quickstart/ollama_quickstart.zh-CN.md): 在 Intel GPU 上运行 **ollama** (*使用 `ipex-llm` 的 C++ 接口*) 
+- [llama.cpp](docs/mddocs/Quickstart/llama_cpp_quickstart.zh-CN.md): 在 Intel GPU 上运行 **llama.cpp** (*使用 `ipex-llm` 的 C++ 接口*) 
 - [PyTorch/HuggingFace](docs/mddocs/Quickstart/install_windows_gpu.zh-CN.md): 使用 [Windows](docs/mddocs/Quickstart/install_windows_gpu.zh-CN.md) 和 [Linux](docs/mddocs/Quickstart/install_linux_gpu.zh-CN.md) 在 Intel GPU 上运行 **PyTorch**、**HuggingFace**、**LangChain**、**LlamaIndex** 等 (*使用 `ipex-llm` 的 Python 接口*) 
 - [vLLM](docs/mddocs/Quickstart/vLLM_quickstart.md): 在 Intel [GPU](docs/mddocs/DockerGuides/vllm_docker_quickstart.md) 和 [CPU](docs/mddocs/DockerGuides/vllm_cpu_docker_quickstart.md) 上使用 `ipex-llm` 运行 **vLLM** 
 - [FastChat](docs/mddocs/Quickstart/fastchat_quickstart.md): 在 Intel GPU 和 CPU 上使用 `ipex-llm` 运行 **FastChat** 服务
@@ -338,6 +337,7 @@ See the demo of running [*Text-Generation-WebUI*](https://ipex-llm.readthedocs.i
 | MiniCPM-Llama3-V-2_5 |  | [link](python/llm/example/GPU/HuggingFace/Multimodal/MiniCPM-Llama3-V-2_5) | [Python link](python/llm/example/NPU/HF-Transformers-AutoModels/Multimodal) |
 | MiniCPM-V-2_6 | [link](python/llm/example/CPU/HF-Transformers-AutoModels/Model/minicpm-v-2_6) | [link](python/llm/example/GPU/HuggingFace/Multimodal/MiniCPM-V-2_6) | [Python link](python/llm/example/NPU/HF-Transformers-AutoModels/Multimodal) |
 | MiniCPM-o-2_6 | | [link](python/llm/example/GPU/HuggingFace/Multimodal/MiniCPM-o-2_6/) |
+| Janus-Pro | | [link](python/llm/example/GPU/HuggingFace/Multimodal/janus-pro/) |
 | StableDiffusion | | [link](python/llm/example/GPU/HuggingFace/Multimodal/StableDiffusion) |
 | Bce-Embedding-Base-V1 | | | [Python link](python/llm/example/NPU/HF-Transformers-AutoModels/Embedding) |
 | Speech_Paraformer-Large | | | [Python link](python/llm/example/NPU/HF-Transformers-AutoModels/Multimodal) |

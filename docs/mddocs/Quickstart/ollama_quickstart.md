@@ -5,13 +5,16 @@
 
 [ollama/ollama](https://github.com/ollama/ollama) is popular framework designed to build and run language models on a local machine; you can now use the C++ interface of [`ipex-llm`](https://github.com/intel-analytics/ipex-llm) as an accelerated backend for `ollama` running on Intel **GPU** *(e.g., local PC with iGPU, discrete GPU such as Arc, Flex and Max)*.
 
+> [!Important]
+> You may use [Ollama portable zip](./ollama_portable_zip_quickstart.md) to directly run Ollama on Intel GPU with ipex-llm (***without the need of manual installations***).
+
 > [!NOTE]
 > For installation on Intel Arc B-Series GPU (such as **B580**), please refer to this [guide](./bmg_quickstart.md).
 
 > [!NOTE]
-> Our current version is consistent with [v0.5.1](https://github.com/ollama/ollama/releases/tag/v0.5.1) of ollama.
+> Our current version is consistent with [v0.5.4](https://github.com/ollama/ollama/releases/tag/v0.5.4) of ollama.
 >
-> `ipex-llm[cpp]==2.2.0b20250105` is consistent with [v0.4.6](https://github.com/ollama/ollama/releases/tag/v0.4.6) of ollama.
+> `ipex-llm[cpp]==2.2.0b20250123` is consistent with [v0.5.1](https://github.com/ollama/ollama/releases/tag/v0.5.1) of ollama.
 
 See the demo of running LLaMA2-7B on Intel Arc GPU below.
 
@@ -25,9 +28,9 @@ See the demo of running LLaMA2-7B on Intel Arc GPU below.
 </table>
 
 > [!NOTE]
-> Starting from `ipex-llm[cpp]==2.2.0b20240912`, oneAPI dependency of `ipex-llm[cpp]` on Windows will switch from `2024.0.0` to `2024.2.1` .
+> Starting from `ipex-llm[cpp]==2.2.0b20250207`, oneAPI dependency of `ipex-llm[cpp]` on Windows will switch from `2024.2.1` to `2025.0.1` .
 > 
-> For this update, it's necessary to create a new conda environment to install the latest version on Windows. If you directly upgrade to `ipex-llm[cpp]>=2.2.0b20240912` in the previous cpp conda environment, you may encounter the error `Can't find sycl7.dll`.
+> For this update, it's necessary to create a new conda environment to install the latest version on Windows. If you directly upgrade to `ipex-llm[cpp]>=2.2.0b20250207` in the previous cpp conda environment, you may encounter the error `Can't find sycl8.dll`.
 
 ## Table of Contents
 - [Install IPEX-LLM for Ollama](./ollama_quickstart.md#1-install-ipex-llm-for-ollama)
@@ -134,7 +137,6 @@ Keep the Ollama service on and open another terminal and run `./ollama pull <mod
   <img src="https://llm-assets.readthedocs.io/en/latest/_images/ollama_pull.png" width=100%; />
 </a>
 
-
 ### 5. Using Ollama
 
 #### Using Curl 
@@ -202,6 +204,7 @@ An example process of interacting with model with `ollama run example` looks lik
 <a href="https://llm-assets.readthedocs.io/en/latest/_images/ollama_gguf_demo_image.png" target="_blank">
   <img src="https://llm-assets.readthedocs.io/en/latest/_images/ollama_gguf_demo_image.png" width=100%; />
 </a>
+
 
 ### Troubleshooting
 #### 1. Unable to run the initialization script

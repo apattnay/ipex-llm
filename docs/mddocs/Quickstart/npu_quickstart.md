@@ -15,6 +15,7 @@ This guide demonstrates:
 - [Runtime Configurations](#runtime-configurations)
 - [Python API](#python-api)
 - [C++ API](#c-api)
+- [llama.cpp Support](#experimental-llamacpp-support)
 - [Accuracy Tuning](#accuracy-tuning)
 
 ## Install Prerequisites
@@ -22,13 +23,13 @@ This guide demonstrates:
 ### Update NPU Driver
 
 > [!IMPORTANT]
-> If you have NPU driver version lower than `32.0.100.3104`, it is highly recommended to update your NPU driver to the latest.
+> It is highly recommended to update your NPU driver to `32.0.100.3104`, which has been thoroughly verified.
 
 To update driver for Intel NPU:
 
-1. Download the latest NPU driver
+1. Download the NPU driver
 
-   - Visit the [official Intel NPU driver page for Windows](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html) and download the latest driver zip file.
+   - Visit the [official Intel NPU driver page for Windows](https://www.intel.com/content/www/us/en/download/794734/838895/intel-npu-driver-windows.html) and download the driver zip file.
    - Extract the driver zip file
 
 2. Install the driver
@@ -37,6 +38,16 @@ To update driver for Intel NPU:
    - Right-click on **Intel(R) AI Boost** and select **Update driver**
    - Choose **Browse my computer for drivers**, navigate to the folder where you extracted the driver zip file, and select **Next**
    - Wait for the installation finished
+
+3. (Optional) Uninstall and update the driver
+
+   Please skip this if you have successfully installed. This is required when the driver to be installed is lower than current version.
+
+   - Open **Device Manager** and locate **Neural processors** -> **Intel(R) AI Boost** in the device list
+   - Right-click on **Intel(R) AI Boost** and select **Uninstall driver**
+   - Choose **Attempt to remove the driver for this device** and select **Uninstall**
+   - Locate and click **Add Drivers** in the toolbar, choose the folder where you extracted the driver zip file, and select **Next**
+   - Wait for the installation finished, locate and click **Scan for hardware changes** in the toolbar
 
 A system reboot is necessary to apply the changes after the installation is complete.
 
@@ -135,6 +146,7 @@ Refer to the following table for examples of verified models:
 | Qwen 2 | [Qwen/Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct), [Qwen/Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Meteor Lake, Lunar Lake, Arrow Lake |
 | Qwen 2.5 | [Qwen/Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Lunar Lake |
 |  | [Qwen/Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Meteor Lake, Lunar Lake, Arrow Lake |
+| DeepSeek-R1 | [deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B), [deepseek-ai/DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Meteor Lake, Lunar Lake, Arrow Lake |
 | MiniCPM | [openbmb/MiniCPM-1B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-1B-sft-bf16), [openbmb/MiniCPM-2B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-2B-sft-bf16) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Meteor Lake, Lunar Lake, Arrow Lake |
 | Baichuan 2 | [baichuan-inc/Baichuan2-7B-Chat](https://huggingface.co/baichuan-inc/Baichuan2-7B-Chat) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/) | Lunar Lake |
 | MiniCPM-Llama3-V-2_5 | [openbmb/MiniCPM-Llama3-V-2_5](https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/Multimodal/) | Lunar Lake |
@@ -164,10 +176,64 @@ Refer to the following table for examples of verified models:
 | Qwen 2 | [Qwen/Qwen2-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2-1.5B-Instruct), [Qwen/Qwen2-7B-Instruct](https://huggingface.co/Qwen/Qwen2-7B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/CPP_Examples) | Meteor Lake, Lunar Lake, Arrow Lake |
 | Qwen 2.5 | [Qwen/Qwen2.5-3B-Instruct](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/CPP_Examples) | Lunar Lake |
 |  | [Qwen/Qwen2.5-7B-Instruct](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/CPP_Examples) | Meteor Lake, Lunar Lake, Arrow Lake |
+| DeepSeek-R1 | [deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B), [deepseek-ai/DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/CPP_Examples) | Meteor Lake, Lunar Lake, Arrow Lake |
 | MiniCPM | [openbmb/MiniCPM-1B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-1B-sft-bf16), [openbmb/MiniCPM-2B-sft-bf16](https://huggingface.co/openbmb/MiniCPM-2B-sft-bf16) | [link](../../../python/llm/example/NPU/HF-Transformers-AutoModels/LLM/CPP_Examples) | Meteor Lake, Lunar Lake, Arrow Lake |
 
 > [!TIP]
 > You could refer to [here](../../../python/llm/example/NPU/HF-Transformers-AutoModels) for full IPEX-LLM examples on Intel NPU.
+
+## (Experimental) llama.cpp Support
+
+IPEX-LLM provides `llama.cpp` compatible API for running GGUF models on Intel NPU.
+
+Refer to the following table for verified models:
+
+| Model | Model link | Verified Platforms |
+|:--|:--|:--|
+| LLaMA 3.2 | [meta-llama/Llama-3.2-3B-Instruct](https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct) | Meteor Lake, Lunar Lake, Arrow Lake |
+| DeepSeek-R1 | [deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B), [deepseek-ai/DeepSeek-R1-Distill-Qwen-7B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B) | Meteor Lake, Lunar Lake, Arrow Lake |
+
+> [!Important]
+>
+> You may use [llama.cpp portable zip](./llama_cpp_npu_portable_zip_quickstart.md) to directly run GGUF models on Intel NPU with ipex-llm (***without the need of manual installations***).
+
+### Run GGUF model using CLI tool
+#### Setup for running llama.cpp
+
+First, you should create a directory to use `llama.cpp`, for instance, use following command to create a `llama-cpp-npu` directory and enter it.
+
+```cmd
+mkdir llama-cpp-npu
+cd llama-cpp-npu
+```
+
+Then, please run the following command with **administrator privilege in Miniforge Prompt** to initialize `llama.cpp` for NPU:
+
+```cmd
+init-llama-cpp.bat
+```
+
+#### Model Download
+
+Before running, you should download or copy community GGUF model to your current directory. For instance,  `DeepSeek-R1-Distill-Qwen-7B-Q6_K.gguf` of [DeepSeek-R1-Distill-Qwen-7B-GGUF](https://huggingface.co/lmstudio-community/DeepSeek-R1-Distill-Qwen-7B-GGUF/tree/main).
+
+#### Run the quantized model
+
+Please refer to [Runtime Configurations](#runtime-configurations) before running the following command in Miniforge Prompt.
+
+```cmd
+llama-cli-npu.exe -m DeepSeek-R1-Distill-Qwen-7B-Q6_K.gguf -n 32 --prompt "What is AI?"
+```
+
+And you could use `llama-cli-npu.exe -h` for more details about meaning of each parameter.
+
+### Run GGUF model using llama.cpp C++ API
+
+IPEX-LLM also supports `llama.cpp` C++ API for running GGUF models on Intel NPU. Refer to [Simple Example](../../../python/llm/example/NPU/llama.cpp/) for usage in details.
+
+> **Note**:
+>
+> - **Warmup on first run**: When running specific GGUF models on NPU for the first time, you might notice delays up to several minutes before the first token is generated. This delay occurs because the blob compilation.
 
 ## Accuracy Tuning
 

@@ -86,7 +86,7 @@ def use_quantize_kv_cache(linear: torch.nn.Module, x: torch.Tensor,
         return os.environ["IPEX_LLM_QUANTIZE_KV_CACHE"] == "1"
     elif os.environ.get("IPEX_LLM_LOW_MEM", None) is not None:
         return os.environ["IPEX_LLM_LOW_MEM"] == "1"
-    elif linear.qtype in [ggml_tensor_qtype["fp16"], ggml_tensor_qtype["bf16"]]:
+    elif linear.weight.dtype != torch.uint8:    # unquantized
         return False
     else:
         device_name = get_xpu_device_name(x.device)
@@ -257,19 +257,6 @@ def mlp_fusion_check(x, qtype, training):
         if device in ["mtl", "lnl", "arl"]:
             return False
     return True
-
-
-def use_xmx(x: torch.Tensor, qtype: int):
-    device = get_xpu_device_name(x.device)
-    return (
-        device in ["arc", "pvc"]
-        and qtype in [SYM_INT4, SYM_INT8, FP8E4, FP8E5, WOQ_INT4]
-        and (
-            (device == "pvc" and 1 < x.size(0) <= 16)
-            or
-            (device != "pvc" and 1 < x.size(0) <= 64)
-        )
-    )
 
 
 def repeat_kv(hidden_states: torch.Tensor, n_rep: int) -> torch.Tensor:
